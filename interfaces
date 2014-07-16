@@ -1,0 +1,22 @@
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+# The primary network interface
+auto em1
+#iface em1 inet dhcp
+iface em1 inet static
+	address 192.168.6.253
+	netmask 255.255.255.0
+	gateway 192.168.6.254
+	dns-nameserver 195.3.96.67 195.3.96.68
+	pre-up iptables-restore < /etc/network/squidiptables.rules
+
+#auto em1:1
+#iface em1:1 inet static
+#	name LocalEthernet
+#	address 192.168.55.127
+#	netmask 255.255.255.0

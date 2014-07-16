@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+############
+# Date="Mon 2014-05-20"
+# Author="berq"
+############
+
+echo 1 > /proc/sys/net/ipv4/ip_forward
+
+LOCAL="192.168.6.0/24"
+RANGE="192.168.6.1-192.168.6.250"
+SQUID_PORT="3128"
+SQUID="192.168.6.253"
+INTERFACE="em1"
+
+# Clean old firewall
+iptables -F
+iptables -X
+iptables -t nat -F
+iptables -t nat -X
+
+# default rule
+iptables -P INPUT ACCEPT
+iptables -P OUTPUT ACCEPT
+iptables -P FORWARD ACCEPT
+iptables -A INPUT -i lo -j ACCEPT
+iptables -A OUTPUT -o lo -j ACCEPT
+
+# router 
+iptables -t nat -A PREROUTING -i $INTERFACE -m iprange --src-range $RANGE -p tcp --dport 80 -j REDIRECT --to-port $SQUID_PORT
+iptables -t nat -A POSTROUTING -o $INTERFACE -m iprange --src-range $RANGE -j SNAT --to-source $SQUID
+
+iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+
+# unlimited access to LAN
+iptables -A INPUT -s $LOCAL -j ACCEPT
+iptables -A OUTPUT -s $LOCAL -j ACCEPT
+
+# DROP everything else and Log it
+iptables -A INPUT -j DROP
+iptables -A INPUT -j LOG
